@@ -51,8 +51,6 @@
 
         txtIPS.Clear()
         txtIPK.Clear()
-        lblPredikat.Text = "-"
-
         txtIPS.Focus()
     End Sub
 End Class
