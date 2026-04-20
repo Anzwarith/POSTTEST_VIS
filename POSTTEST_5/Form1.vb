@@ -1,4 +1,6 @@
-﻿Public Class Form1
+﻿Imports MySqlConnector
+
+Public Class Form1
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         TampilData()
@@ -44,5 +46,18 @@
             Application.Exit()
         End If
     End Sub
-
+    Public Function GetAllLapangan() As DataTable
+        Dim dt As New DataTable()
+        Try
+            Dim query As String = "SELECT * FROM lapangan"
+            Using conn As MySqlConnection = GetConnection()
+                Using da As New MySqlDataAdapter(query, conn)
+                    da.Fill(dt)
+                End Using
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Gagal ambil lapangan: " & ex.Message)
+        End Try
+        Return dt
+    End Function
 End Class

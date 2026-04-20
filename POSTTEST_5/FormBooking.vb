@@ -1,4 +1,6 @@
-﻿Public Class FormBooking
+﻿Imports MySqlConnector
+
+Public Class FormBooking
 
     Dim hargaPerJam As Integer = 0
 
@@ -16,17 +18,36 @@
 
     Private Sub HitungTotal()
 
-        If cbLapangan.Text = "Lapangan Indoor" Then
-            hargaPerJam = 250000
-        ElseIf cbLapangan.Text = "Lapangan Outdoor" Then
-            hargaPerJam = 150000
-        Else
-            hargaPerJam = 0
-        End If
+        If cbLapangan.SelectedValue Is Nothing Then Exit Sub
+
+        Dim harga As Integer = 0
+
+        Try
+            Using conn As MySqlConnection = GetConnection()
+                conn.Open()
+
+                Dim query As String = "SELECT harga_per_jam FROM lapangan WHERE id_lapangan=@id"
+
+                Using cmd As New MySqlCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@id", cbLapangan.SelectedValue)
+
+                    Dim result = cmd.ExecuteScalar()
+
+                    If result IsNot Nothing AndAlso Not IsDBNull(result) Then
+                        harga = Convert.ToInt32(result)
+                    Else
+                        harga = 0
+                    End If
+
+                End Using
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Error ambil harga: " & ex.Message)
+        End Try
 
         Dim durasi As Integer
-        If Integer.TryParse(txtDurasi.Text, durasi) AndAlso hargaPerJam > 0 Then
-            txtTotal.Text = (hargaPerJam * durasi).ToString()
+        If Integer.TryParse(txtDurasi.Text, durasi) Then
+            txtTotal.Text = (harga * durasi).ToString()
         Else
             txtTotal.Text = "0"
         End If
@@ -55,12 +76,13 @@
             Return
         End If
 
-        If SimpanBooking(txtNama.Text.Trim(), mkHP.Text, cbLapangan.Text, dtTanggal.Value.ToString("yyyy-MM-dd"), txtDurasi.Text, txtTotal.Text) Then
+        If SimpanBooking(txtNama.Text.Trim(), mkHP.Text, cbLapangan.SelectedValue, dtTanggal.Value.ToString("yyyy-MM-dd"), txtDurasi.Text, txtTotal.Text) Then
             MessageBox.Show("Data berhasil disimpan", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Form1.TampilData()
             Bersihkan()
         End If
     End Sub
+
 
     Private Sub btnUbah_Click(sender As Object, e As EventArgs) Handles btnUbah.Click
         If txtID.Text.Trim() = "" Then
@@ -68,7 +90,7 @@
             Return
         End If
 
-        If UbahBooking(txtID.Text.Trim(), txtNama.Text.Trim(), mkHP.Text, cbLapangan.Text, dtTanggal.Value.ToString("yyyy-MM-dd"), txtDurasi.Text, txtTotal.Text) Then
+        If UbahBooking(txtID.Text.Trim(), txtNama.Text.Trim(), mkHP.Text, cbLapangan.SelectedValue, dtTanggal.Value.ToString("yyyy-MM-dd"), txtDurasi.Text, txtTotal.Text) Then
             MessageBox.Show("Data berhasil diubah", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Form1.TampilData()
             Bersihkan()
@@ -109,6 +131,11 @@
     End Sub
 
     Private Sub FormBooking_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Dim dt As DataTable = GetAllLapangan()
+        cbLapangan.DataSource = dt
+        cbLapangan.DisplayMember = "nama_lapangan"
+        cbLapangan.ValueMember = "id_lapangan"
+
         Bersihkan()
     End Sub
 
