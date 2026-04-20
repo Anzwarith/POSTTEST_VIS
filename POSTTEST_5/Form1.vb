@@ -46,6 +46,7 @@ Public Class Form1
             Application.Exit()
         End If
     End Sub
+
     Public Function GetAllLapangan() As DataTable
         Dim dt As New DataTable()
         Try
